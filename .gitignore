@@ -1,0 +1,7 @@
+*.mp4
+*.mov
+*.jpg
+*.tiff
+*.ipynb
+.ipynb_checkpoints/
+.DS_Store
