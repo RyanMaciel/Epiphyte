@@ -1,3 +1,27 @@
+// Deal w websockets stuff :)
+let viewer_positions = [{x:0, y:0}];
+function setup_socket(){
+    // Create WebSocket connection.
+  const socket = new WebSocket('ws://localhost:8001', 'echo-protocol');
+  // Connection opened
+  socket.addEventListener('open', function () {
+      console.log("Opened websocket connection");
+  });
+  
+  // Listen for messages
+  socket.addEventListener('message', function (event) {
+    // expect json of form {positions:[{x: <float>, y: <float>}, ...]}
+    // where x and y 0<=x<=100
+    try{
+      viewer_positions = JSON.parse(event.data).positions;
+      console.log('Message from server: ', viewer_positions);
+    } catch(err){
+      console.log("Parsing socket data failed with error:");
+      console.error(err);
+    }
+  });
+}
+
 const size = 800
 const p_side = 20
 let points = [];
@@ -20,6 +44,7 @@ function setup_sound(){
 
 function setup() {
   setup_sound();
+  setup_socket();
   for( let i = 0; i < p_side; i++){
     let row = [];
     let original_row = [];
@@ -39,10 +64,16 @@ function distance(x1, y1, x2, y2){
 }
 
 function draw() {
-  let max_dist = sqrt(size**2 + size**2)
 
   background(255);
   fill(200);
+
+  // Get positions from websockets data.
+  const v_pos = {x: 0, y:0};
+  v_pos.x = (viewer_positions[0].x * size) / 100;
+  v_pos.y = (viewer_positions[0].y * size) / 100;
+  circle(v_pos.x, v_pos.y, 50);
+
    for( let i = 0; i < points.length; i++){
     for( let j = 0; j < points[0].length; j++){
       
@@ -56,11 +87,11 @@ function draw() {
       
       // only consider mouse if its on the screen
       const screen_margin = 20;
-      if (mouseX > screen_margin && mouseX < size-screen_margin && mouseY > screen_margin && mouseY < size-screen_margin){
+      if (v_pos.x > screen_margin && v_pos.x < size-screen_margin && v_pos.y > screen_margin && v_pos.y < size-screen_margin){
         // distance from mouse:
-        let d = distance(p.x, p.y, mouseX, mouseY);
-        p.acc.x += dir.x + (mouseX - p.x) / (1*(d**1.2));
-        p.acc.y += dir.y + (mouseY - p.y) / (1*(d**1.2));
+        let d = distance(p.x, p.y, v_pos.x, v_pos.y);
+        p.acc.x += dir.x + (v_pos.x - p.x) / (1*(d**1.2));
+        p.acc.y += dir.y + (v_pos.y - p.y) / (1*(d**1.2));
       } else {
         p.acc.x += dir.x;
         p.acc.y += dir.y;
@@ -77,16 +108,16 @@ function draw() {
       // fill(acc_con * 100, acc_con*99, 100);
       
       // sound
-      let s_obj = os[i][j];
-      if(p.acc.x + p.acc.y > 1.5){
-        if(s_obj.on == false){
-          s_obj.on = true;
-          s_obj.osc.start();
-        }
-      } else {
-        s_obj.on = false;
-        s_obj.osc.stop();
-      }
+      // let s_obj = os[i][j];
+      // if(p.acc.x + p.acc.y > 1.5){
+      //   if(s_obj.on == false){
+      //     s_obj.on = true;
+      //     s_obj.osc.start();
+      //   }
+      // } else {
+      //   s_obj.on = false;
+      //   s_obj.osc.stop();
+      // }
       fill(255-p.acc.x*100, 255-p.acc.y * 100, 255-sin(p.acc.y) * 100)
       circle(p.x, p.y, 8);
     } 
