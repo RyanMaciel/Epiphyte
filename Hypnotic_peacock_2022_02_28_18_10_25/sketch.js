@@ -22,7 +22,7 @@ function setup_socket(){
   });
 }
 
-const size = 800
+const size = {x: 1400, y:800}
 const p_side = 20
 let points = [];
 let original_points = []
@@ -56,13 +56,13 @@ function setup() {
     let row = [];
     let original_row = [];
     for( let j = 0; j < p_side; j++){
-      row.push({x: i * (size/p_side) + (size/p_side/2), y:j * (size/p_side) + (size/p_side/2), acc: {x: 0, y:0}});
-      original_row.push({x: i * (size/p_side) + (size/p_side/2), y:j * (size/p_side) + (size/p_side/2), acc: {x: 0, y:0}});
+      row.push({x: i * (size.x/p_side) + (size.x/p_side/2), y:j * (size.y/p_side) + (size.y/p_side/2), acc: {x: 0, y:0}});
+      original_row.push({x: i * (size.x/p_side) + (size.x/p_side/2), y:j * (size.y/p_side) + (size.y/p_side/2), acc: {x: 0, y:0}});
     } 
     points.push(row);
     original_points.push(original_row);
   }
-  createCanvas(size, size);
+  createCanvas(size.x, size.y);
   noStroke();
 }
 
@@ -79,8 +79,8 @@ function draw() {
 
   // Get positions from websockets data.
   const v_pos = {x: 0, y:0};
-  v_pos.x = (viewer_positions[0].x * size) / 100;
-  v_pos.y = (viewer_positions[0].y * size) / 100;
+  v_pos.x = (viewer_positions[0].x * size.x) / 100;
+  v_pos.y = (viewer_positions[0].y * size.y) / 100;
   // circle(v_pos.x, v_pos.y, 50);
 
    for( let i = 0; i < points.length; i++){
@@ -96,7 +96,7 @@ function draw() {
       
       // only consider mouse if its on the screen
       const screen_margin = 20;
-      if (v_pos.x > screen_margin && v_pos.x < size-screen_margin && v_pos.y > screen_margin && v_pos.y < size-screen_margin){
+      if (v_pos.x > screen_margin && v_pos.x < size.x-screen_margin && v_pos.y > screen_margin && v_pos.y < size.y-screen_margin){
         // distance from mouse:
         let d = distance(p.x, p.y, v_pos.x, v_pos.y);
         p.acc.x += dir.x + (v_pos.x - p.x) / (1*(d**1.2));
