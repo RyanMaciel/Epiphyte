@@ -5,3 +5,9 @@ html, body {
 canvas {
   display: block;
 }
+
+video {
+  position: absolute;
+  top: 0px;
+  opacity: 0.7;
+}

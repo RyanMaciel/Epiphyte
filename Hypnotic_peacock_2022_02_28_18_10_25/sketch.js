@@ -42,6 +42,13 @@ function setup_sound(){
   }
 }
 
+// Deal with video
+function setup_video(){
+  let vid = createVideo("http://localhost:8000/test.MP4", (a)=>console.log(a))
+  vid.loop();
+  setTimeout(()=>{vid.remove()}, 700)
+}
+
 function setup() {
   setup_sound();
   setup_socket();
@@ -64,15 +71,17 @@ function distance(x1, y1, x2, y2){
 }
 
 function draw() {
-
-  background(255);
+  if(int(random(0, 600)) == 0){
+    setup_video();
+  }
+  // background(255);
   fill(200);
 
   // Get positions from websockets data.
   const v_pos = {x: 0, y:0};
   v_pos.x = (viewer_positions[0].x * size) / 100;
   v_pos.y = (viewer_positions[0].y * size) / 100;
-  circle(v_pos.x, v_pos.y, 50);
+  // circle(v_pos.x, v_pos.y, 50);
 
    for( let i = 0; i < points.length; i++){
     for( let j = 0; j < points[0].length; j++){

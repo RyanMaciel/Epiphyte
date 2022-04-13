@@ -5,16 +5,16 @@ import time
 import random
 import websockets
 
-from vision import capture
+from vision import Vision
 
-
+v_interface = Vision()
 async def handler(websocket):
   print("handler called")
 
   async def handle_position_data(pos):
     if pos:
       x = pos[0]
-      y = 50 #pos[1]
+      y = min((pos[1] - 50) * 2, 100)
       print(x)
       print(y)
       obj = {
@@ -26,7 +26,7 @@ async def handler(websocket):
 
   
   while True:
-    coords = capture()
+    coords = v_interface.capture()
     print(coords)
     await handle_position_data(coords)
 
@@ -37,4 +37,5 @@ async def main():
 
 
 if __name__ == "__main__":
+  
   asyncio.run(main())
