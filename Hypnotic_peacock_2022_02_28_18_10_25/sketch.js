@@ -22,11 +22,12 @@ function setup_socket(){
   });
 }
 
-const size = {x: 1400, y:800}
+let size = {x: 1400, y:800}
 const p_side = 20
 let points = [];
 let original_points = []
 const jitter = 0.02;
+const vid_chance = 450;
 
 const os = [];
 function setup_sound(){
@@ -44,14 +45,30 @@ function setup_sound(){
 
 // Deal with video
 function setup_video(){
-  let vid = createVideo("http://localhost:8000/test.MP4", (a)=>console.log(a))
-  vid.loop();
-  setTimeout(()=>{vid.remove()}, 700)
+  
+  // hit list endpoint for videos accessable to us
+  req_callback = (resp)=>{
+    const vids = JSON.parse(resp)
+    // choose one to show
+    let vid_name = vids[Math.floor(Math.random()*vids.length)];
+    let vid = createVideo("http://localhost:8000/" + vid_name, (a)=>console.log(a))
+    vid.loop();
+    setTimeout(()=>{vid.remove()}, 700)
+  }
+  var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = ()=>{
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+        req_callback(xmlHttp.responseText);
+    }
+  xmlHttp.open("GET", "http://localhost:8000/list", true); // true for asynchronous 
+  xmlHttp.send(null);
+
+  
 }
 
-function setup() {
-  setup_sound();
-  setup_socket();
+function setup_grid(){
+  points = []
+  original_points = []
   for( let i = 0; i < p_side; i++){
     let row = [];
     let original_row = [];
@@ -62,16 +79,36 @@ function setup() {
     points.push(row);
     original_points.push(original_row);
   }
+}
+function setup() {
+  setup_sound();
+  setup_socket();
+  size = {x: windowWidth, y: windowHeight}
+  setup_grid();
   createCanvas(size.x, size.y);
   noStroke();
 }
 
+// fullscreen on click
+// https://p5js.org/reference/#/p5/fullscreen
+function mousePressed() {
+  if (mouseX > 0 && mouseX < 100 && mouseY > 0 && mouseY < 100) {
+    let fs = fullscreen();
+    fullscreen(!fs);
+  }
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+  size = {x: windowWidth, y: windowHeight}
+  setup_grid()
+}
 function distance(x1, y1, x2, y2){
   return sqrt((x1 - x2)**2 + (y1-y2)**2);
 }
 
 function draw() {
-  if(int(random(0, 600)) == 0){
+  if(int(random(0, vid_chance)) == 0){
     setup_video();
   }
   // background(255);
@@ -81,7 +118,7 @@ function draw() {
   const v_pos = {x: 0, y:0};
   v_pos.x = (viewer_positions[0].x * size.x) / 100;
   v_pos.y = (viewer_positions[0].y * size.y) / 100;
-  // circle(v_pos.x, v_pos.y, 50);
+  circle(v_pos.x, v_pos.y, 50);
 
    for( let i = 0; i < points.length; i++){
     for( let j = 0; j < points[0].length; j++){

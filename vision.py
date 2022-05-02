@@ -7,27 +7,52 @@ import torch
 import numpy as np
 from torch import hub # Hub contains other models like FasterRCNN
 
-out_file = "test.mp4"
+
 four_cc = cv2.VideoWriter_fourcc(*"H264") #Using MJPEG codex
+
+from queue import Queue
+from threading import Thread
+
+def find_camera(vid_cap):
+    for i in range(0, 200):
+        try:   
+            vid_cap.open(i)
+            if vid_cap.isOpened():
+                print(i)
+                print("worked")
+        except:
+            continue
 
 class Vision:
     def __init__(self):
+
+        self.num_frames=0
         self.model = torch.hub.load( \
                         'ultralytics/yolov5', \
                         'yolov5s', \
                         pretrained=True)
-        
-        self.player = cv2.VideoCapture(0) #Get your video stream.
-
-
+        self.player = cv2.VideoCapture(1) # camera is 3
         #Below code creates a new video writer object to write our
         #output stream.
+        # self.x_shape = 1024
+        # self.y_shape = 576
         self.x_shape = int(self.player.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.y_shape = int(self.player.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self.vid_writer = cv2.VideoWriter(out_file, four_cc, 20, \
+
+        self.out_file = "clip0.mp4"
+        self.out_file_num = 0
+        self.vid_writer = cv2.VideoWriter("a.mp4", four_cc, 20, \
                             (self.x_shape, self.y_shape))
-        
-        self.num_frames = 0
+
+        assert self.player.isOpened() # Make sure that there is a stream. 
+        for i in range(0, 100):
+            print(i)
+            _, frame = self.player.read()
+            if i>20:
+                self.vid_writer.write(frame)
+        self.vid_writer.release()
+        # self.vid_writer = cv2.VideoWriter("a.mp4", four_cc, 20, \
+        #                     (self.x_shape, self.y_shape))
 
     """
     The function below identifies the device which is availabe to make the prediction and uses it to load and infer the frame. Once it has results it will extract the labels and cordinates(Along with scores) for each object detected in the frame.
@@ -44,6 +69,8 @@ class Vision:
 
     # Get the position of the bottom middle of the bounding box (normalized to be 0...100)
     def get_footer_coords(self, results, frame):
+        if frame is None:
+            return (0, 0)
         labels, cord = results
         labels = labels.astype(int)
         n = len(labels)
@@ -102,21 +129,25 @@ class Vision:
     """
     def capture(self):
         self.num_frames += 1
-        assert self.player.isOpened() # Make sure that their is a stream. 
-        #Below code creates a new video writer object to write our
-        #output stream.
+        if not self.player.isOpened():
+            self.vid_writer = cv2.VideoWriter("a.mp4", four_cc, 20, \
+                    (self.x_shape, self.y_shape)) 
         _, frame = self.player.read() # Read the first frame.
+        if frame is None:
+            return (0, 0)
         results = self.score_frame(frame, self.model) # Score the Frame
         frame = self.plot_boxes(results, frame) # Plot the boxes.
         
         if self.vid_writer.isOpened():
             self.vid_writer.write(frame) # Write the frame onto the output.
         
-        if self.num_frames % 100 == 25:
+        if self.num_frames % 40 == 10:
             self.vid_writer.release()
+            self.out_file_num += 1
+            self.out_file = "clip" + str(self.out_file_num) + ".mp4"
 
-        if self.num_frames % 100 == 99:
-            self.vid_writer = cv2.VideoWriter(out_file, four_cc, 20, \
+        if self.num_frames % 40 == 39:
+            self.vid_writer = cv2.VideoWriter(self.out_file, four_cc, 20, \
                             (self.x_shape, self.y_shape))
 
         return self.get_footer_coords(results, frame)
