@@ -27,7 +27,7 @@ const p_side = 20
 let points = [];
 let original_points = []
 const jitter = 0.02;
-const vid_chance = 450;
+const vid_chance = 200;
 
 const os = [];
 function setup_sound(){
@@ -43,6 +43,7 @@ function setup_sound(){
   }
 }
 
+let vid_on = false;
 // Deal with video
 function setup_video(){
   
@@ -50,10 +51,18 @@ function setup_video(){
   req_callback = (resp)=>{
     const vids = JSON.parse(resp)
     // choose one to show
-    let vid_name = vids[Math.floor(Math.random()*vids.length)];
+    let vid_name = vids[vids.length-1]; // default to most recent.
+    if(Math.random() < 0.5){ // 50% chance of doing a random old one.
+      vid_name = vids[Math.floor(Math.random()*vids.length)];
+    }
+    
     let vid = createVideo("http://localhost:8000/" + vid_name, (a)=>console.log(a))
     vid.loop();
-    setTimeout(()=>{vid.remove()}, 700)
+    vid_on = true;
+    setTimeout(()=>{
+      vid.remove();
+      setTimeout(()=>{vid_on=false}, 500);
+    }, 800 + Math.floor(Math.random() * 200))
   }
   var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = ()=>{
@@ -111,7 +120,9 @@ function draw() {
   if(int(random(0, vid_chance)) == 0){
     setup_video();
   }
-  // background(255);
+  if(!vid_on){
+    background(255);
+  }
   fill(200);
 
   // Get positions from websockets data.

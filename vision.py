@@ -31,13 +31,13 @@ class Vision:
                         'ultralytics/yolov5', \
                         'yolov5s', \
                         pretrained=True)
-        self.player = cv2.VideoCapture(1) # camera is 3
+        self.player = cv2.VideoCapture(3) # camera is 3
         #Below code creates a new video writer object to write our
         #output stream.
-        # self.x_shape = 1024
-        # self.y_shape = 576
-        self.x_shape = int(self.player.get(cv2.CAP_PROP_FRAME_WIDTH))
-        self.y_shape = int(self.player.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        self.x_shape = 1024
+        self.y_shape = 576
+        # self.x_shape = int(self.player.get(cv2.CAP_PROP_FRAME_WIDTH))
+        # self.y_shape = int(self.player.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
         self.out_file = "clip0.mp4"
         self.out_file_num = 0
